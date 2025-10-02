@@ -1,7 +1,6 @@
 import datetime
 
 
-
 # template for a task
 data = {
     "title": "",
@@ -95,7 +94,7 @@ def editTask(task):
     except Exception as e:
         print("Error editing task:", e)
 
-# Easter egg!!!
+
 # main loop wrapped in try/except
 while userWant:
     try:

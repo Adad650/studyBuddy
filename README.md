@@ -22,8 +22,20 @@ Provides a general overview of all tasks needed to be completed
 Allows you to see things like deadlines, flash cards, priority, etc.
 
 ## Future Upgrade:
-* **HTML/CSS UI**
-* **Reminders about deadline through live time checking**
-* **LLM assistant for simplicity and help**
+
+### Milestone 1: fix absolute basic things
+**Easier navigation through tasks (avoid typing task titles). Use task IDs not task titles etc**
+**Better display of the entire JSON fields**
+
+### Milestone 2: I use this everyday
+**A Browser UI so that I run this easily**
+**Reminders about deadline**
+
+### Milestone 3: another person uses this everyday
+**task 1**
+**task 2**
+
+
+
 
 ps, Find the easter egg
