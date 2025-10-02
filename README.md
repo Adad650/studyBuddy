@@ -25,3 +25,5 @@ Allows you to see things like deadlines, flash cards, priority, etc.
 * **HTML/CSS UI**
 * **Reminders about deadline through live time checking**
 * **LLM assistant for simplicity and help**
+
+ps, Find the easter egg
