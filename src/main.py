@@ -85,7 +85,7 @@ def format_task_output(task, detailed=False):
 
     return "\n".join(lines)
 
-def list_tasks_brief(ts):
+def listTaskBrief(ts):
     if not ts:
         print("No tasks found.")
         return
@@ -123,26 +123,25 @@ def edit_task(task):
             valid=[1,2,3,4,5,6,7,8]
         )
         match choice:
-    
-        case 1:
-            task["title"] = safe_input("New title: ").strip()
-        case 2:
-            task["details"] = safe_input("New details: ").strip()
-        case 3:
-            task["dueDate"] = prompt_datetime("New due date")
-        case 4:
-            task["priority"] = prompt_int("New priority (1=high, 2=medium, 3=low): ", valid=[1,2,3])
-        elif choice == 5:
-            tags_raw = safe_input("New tags (comma separated): ").strip()
-            task["tags"] = [t.strip() for t in tags_raw.split(",")] if tags_raw else []
-        elif choice == 6:
-            task["status"] = safe_input("New status (todo/doing/done): ").strip().lower() or task.get("status","todo")
-            if task["status"] == "done":
-                task["completedAt"] = datetime.now()
-        elif choice == 7:
-            manage_flashcards(task)
-        elif choice == 8:
-            break
+            case 1:
+                task["title"] = safe_input("New title: ").strip()
+            case 2:
+                task["details"] = safe_input("New details: ").strip()
+            case 3:
+                task["dueDate"] = prompt_datetime("New due date")
+            case 4:
+                task["priority"] = prompt_int("New priority (1=high, 2=medium, 3=low): ", valid=[1,2,3])
+            case 5:
+                tags_raw = safe_input("New tags (comma separated): ").strip()
+                task["tags"] = [t.strip() for t in tags_raw.split(",")] if tags_raw else []
+            case 6:
+                task["status"] = safe_input("New status (todo/doing/done): ").strip().lower() or task.get("status","todo")
+                if task["status"] == "done":
+                    task["completedAt"] = datetime.now()
+            case 7:
+                manage_flashcards(task)
+            case 8:
+                break
 
 def manage_flashcards(task):
     cards = task.get("flashCards", [])
@@ -180,11 +179,11 @@ def manage_flashcards(task):
         elif sub == 5:
             return
 
-def view_task_detail(ts):
+def viewTaskDetail(ts):
     if not ts:
         print("No tasks available.")
         return
-    list_tasks_brief(ts)
+    listTaskBrief(ts)
     sel = safe_input("Task number or name: ").strip()
     t = resolve_task_selection(ts, sel)
     if t:
@@ -192,11 +191,11 @@ def view_task_detail(ts):
     else:
         print("Task not found.")
 
-def study_mode(task_list):
+def studyMode(task_list):
     if not task_list:
         print("No tasks to study.")
         return
-    list_tasks_brief(task_list)
+    listTaskBrief(task_list)
     sel = safe_input("Task number or name: ").strip()
     chosen_task = resolve_task_selection(task_list, sel)
     if not chosen_task:
@@ -224,28 +223,28 @@ def main():
     while True:
         choice = prompt_int("1. Add Task\n2. View All\n3. View One\n4. Edit\n5. Study Mode\n6. Exit\n", valid=[1,2,3,4,5,6])
         match choice:
-        case 1:
-            new_task = create_task()
-            if new_task:
-                tasks.append(new_task)
-                print("Task created.")
-        case 2:
-            list_tasks_brief(tasks)
-        case 3:
-            view_task_detail(tasks)
-        case 4:
-            if not tasks:
-                print("No tasks.")
-            else:
-                list_tasks_brief(tasks)
-                idx = prompt_int("Task number to edit: ")
-                if 1 <= idx <= len(tasks):
-                    edit_task(tasks[idx-1])
-        case 5:
-            study_mode(tasks)
-        case 6:
-            print("Goodbye!")
-            break
+            case 1:
+                new_task = create_task()
+                if new_task:
+                    tasks.append(new_task)
+                    print("Task created.")
+            case 2:
+                listTaskBrief(tasks)
+            case 3:
+                viewTaskDetail(tasks)
+            case 4:
+                if not tasks:
+                    print("No tasks.")
+                else:
+                    listTaskBrief(tasks)
+                    idx = prompt_int("Task number to edit: ")
+                    if 1 <= idx <= len(tasks):
+                        edit_task(tasks[idx-1])
+            case 5:
+                studyMode(tasks)
+            case 6:
+                print("Goodbye!")
+                break
 
 if __name__ == "__main__":
     main()

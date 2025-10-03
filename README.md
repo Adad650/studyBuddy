@@ -25,7 +25,8 @@ Allows you to see things like deadlines, flash cards, priority, etc.
 
 ### Milestone 1: fix absolute basic things
 **Easier navigation through tasks (avoid typing task titles). Use task IDs not task titles etc**
-**Better display of the entire JSON fields**
+**Better display of the entire JSON fields** //Completed
+**Study mode w/ flashcards** //Completed
 
 ### Milestone 2: I use this everyday
 **A Browser UI so that I run this easily**
@@ -34,6 +35,13 @@ Allows you to see things like deadlines, flash cards, priority, etc.
 ### Milestone 3: another person uses this everyday
 **task 1**
 **task 2**
+
+## How to run
+Good news, There are no requrements. Just import main.py into you prefered IDE and type into terminal:
+```bash
+python3 main.py
+```
+As long as you have a version of python with datetime installed as a library(and of course internet) It works!
 
 
 
