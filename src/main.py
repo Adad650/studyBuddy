@@ -1,148 +1,251 @@
-import datetime
+from datetime import datetime
 
-
-# template for a task
-data = {
+TASK_TEMPLATE = {
     "title": "",
     "details": "",
-    "dueDate": "",
+    "dueDate": None,
     "priority": None,
     "tags": [],
     "status": "todo",
-    "createdAt": "",
+    "createdAt": None,
     "completedAt": None,
     "flashCards": []
 }
 
 tasks = []
-userWant = True
 
-
-def createTask():
+def safe_input(prompt):
     try:
-        task = data.copy()
+        return input(prompt)
+    except (EOFError, KeyboardInterrupt):
+        print("\nExiting…")
+        exit()
 
-        task["title"] = input("Input task name:  ")
-        task["details"] = input("Input task Description: ")
-        task["dueDate"] = input("Input task due date: ")
-        task["priority"] = int(input("Priority (1=high, 2=medium, 3=low): "))
-        task["tags"] = input("Input task tags (comma separated): ").split(",")
-        task["status"] = input("Input task status (todo/doing/done): ")
-        task["createdAt"] = str(datetime.datetime.now())
+def prompt_int(prompt, valid=None):
+    while True:
+        s = safe_input(prompt).strip()
+        try:
+            val = int(s)
+            if valid and val not in valid:
+                print(f"Enter one of: {valid}")
+                continue
+            return val
+        except ValueError:
+            print("Enter a valid integer.")
 
-        flashCardQuantity = int(input("How many flash cards do you want to make? "))
-        for i in range(flashCardQuantity):
-            print(f"\n--- Flashcard {i+1} ---")
-            card_title = input("Flashcard Title: ")
-            card_text = input("Flashcard Text: ")
-            flashCard = {"Title": card_title, "Text": card_text}
-            task["flashCards"].append(flashCard)
-
-        return task
-    except Exception as e:
-        print("⚠️ Error creating task:", e)
+def prompt_datetime(prompt):
+    s = safe_input(prompt + " (YYYY-MM-DD HH:MM or blank): ").strip()
+    if not s:
         return None
-
-
-def editTask(task):
     try:
-        while True:
-            print("\n\nEditing Task:", task["title"])
-            choice = int(input(
-                "Choose what to edit:\n"
-                "1. Title\n2. Details\n3. Due Date\n4. Priority\n5. Tags\n"
-                "6. Status\n7. Flashcards\n8. Back\n"
-            ))
+        return datetime.strptime(s, "%Y-%m-%d %H:%M")
+    except ValueError:
+        print("Invalid format. Use YYYY-MM-DD HH:MM")
+        return prompt_datetime(prompt)
 
-            if choice == 1:
-                task["title"] = input("New title: ")
-            elif choice == 2:
-                task["details"] = input("New details: ")
-            elif choice == 3:
-                task["dueDate"] = input("New due date: ")
-            elif choice == 4:
-                task["priority"] = int(input("New priority (1=high, 2=medium, 3=low): "))
-            elif choice == 5:
-                task["tags"] = input("New tags (comma separated): ").split(",")
-            elif choice == 6:
-                task["status"] = input("New status (todo/doing/done): ")
-                if task["status"] == "done":
-                    task["completedAt"] = str(datetime.datetime.now())
-            elif choice == 7:
-                sub = int(input("1. Add flashcard\n2. Edit flashcard\n3. Delete flashcard\n4. Back\n"))
-                if sub == 1:
-                    card_title = input("Flashcard Title: ")
-                    card_text = input("Flashcard Text: ")
-                    task["flashCards"].append({"Title": card_title, "Text": card_text})
-                elif sub == 2 and task["flashCards"]:
-                    for i, card in enumerate(task["flashCards"], start=1):
-                        print(f"{i}. {card['Title']} - {card['Text']}")
-                    idx = int(input("Select card number to edit: ")) - 1
-                    if 0 <= idx < len(task["flashCards"]):
-                        task["flashCards"][idx]["Title"] = input("New title: ")
-                        task["flashCards"][idx]["Text"] = input("New text: ")
-                elif sub == 3 and task["flashCards"]:
-                    for i, card in enumerate(task["flashCards"], start=1):
-                        print(f"{i}. {card['Title']} - {card['Text']}")
-                    idx = int(input("Select card number to delete: ")) - 1
-                    if 0 <= idx < len(task["flashCards"]):
-                        task["flashCards"].pop(idx)
-            elif choice == 8:
-                break
-            else:
-                print("Invalid choice.")
-    except Exception as e:
-        print("Error editing task:", e)
+def fmt_dt(dt):
+    return dt.strftime("%Y-%m-%d %H:%M") if dt else "N/A"
 
+def resolve_task_selection(task_list, selection):
+    if not task_list:
+        return None
+    sel = selection.strip()
+    if sel.isdigit():
+        idx = int(sel) - 1
+        if 0 <= idx < len(task_list):
+            return task_list[idx]
+        return None
+    low = sel.lower()
+    for t in task_list:
+        if str(t.get("title", "")).strip().lower() == low:
+            return t
+    return None
 
-# main loop wrapped in try/except
-while userWant:
-    try:
-        choice = int(input("Choose an option:\n1. Add a new task\n2. View all tasks\n3. View individual task\n4. Edit\n5. Exit\n"))
+def format_task_output(task, detailed=False):
+    priority_map = {1: "High", 2: "Medium", 3: "Low"}
+    tags_str = ", ".join(task["tags"]) if task["tags"] else "No tags"
+
+    lines = [
+        f"Task: {task.get('title', 'Untitled Task')}",
+        f"Status: {str(task.get('status', 'N/A')).upper()}",
+        f"Due: {fmt_dt(task['dueDate'])}",
+        f"Priority: {priority_map.get(task.get('priority'), 'Not set')}",
+        f"Tags: {tags_str}",
+        f"Details: {task.get('details', 'No details provided')}",
+        f"Created: {fmt_dt(task['createdAt'])}",
+        f"Completed: {fmt_dt(task['completedAt'])}",
+    ]
+
+    if detailed and task.get("flashCards"):
+        lines.append("Flashcards:")
+        for i, card in enumerate(task["flashCards"], start=1):
+            title = card.get("Title", "Untitled")
+            text = card.get("Text", "No content")
+            lines.append(f"  {i}. {title} -> {text}")
+
+    return "\n".join(lines)
+
+def list_tasks_brief(ts):
+    if not ts:
+        print("No tasks found.")
+        return
+    for i, t in enumerate(ts, start=1):
+        status = str(t.get('status', 'N/A')).upper()
+        title = str(t.get('title', 'Untitled'))
+        due_disp = fmt_dt(t['dueDate']) if t['dueDate'] else "No due date"
+        print(f"{i}. {title} [{status}] (Due: {due_disp})")
+
+def create_task():
+    task = TASK_TEMPLATE.copy()
+    task["title"] = safe_input("Task name: ").strip()
+    task["details"] = safe_input("Description: ").strip()
+    task["dueDate"] = prompt_datetime("Due date")
+    task["priority"] = prompt_int("Priority (1=high, 2=medium, 3=low): ", valid=[1, 2, 3])
+    tags_raw = safe_input("Tags (comma separated): ").strip()
+    task["tags"] = [t.strip() for t in tags_raw.split(",")] if tags_raw else []
+    task["status"] = safe_input("Status (todo/doing/done): ").strip().lower() or "todo"
+    task["createdAt"] = datetime.now()
+
+    n = prompt_int("How many flash cards? (0+): ")
+    for i in range(n):
+        print(f"Flashcard {i+1}")
+        card_title = safe_input("  Title: ").strip()
+        card_text = safe_input("  Answer: ").strip()
+        task["flashCards"].append({"Title": card_title, "Text": card_text})
+
+    return task
+
+def edit_task(task):
+    while True:
+        print(f"Editing {task.get('title', 'Untitled')}")
+        choice = prompt_int(
+            "1. Title\n2. Details\n3. Due Date\n4. Priority\n5. Tags\n6. Status\n7. Flashcards\n8. Back\n",
+            valid=[1,2,3,4,5,6,7,8]
+        )
         match choice:
-            case 1:
-                new_task = createTask()
-                if new_task:  # only append if task was successfully created
-                    tasks.append(new_task)
-                    print("\nNew task created and added to list!")
-            case 2:
-                print("\nCurrent Tasks:")
-                for i, t in enumerate(tasks, start=1):
-                    print(f"{i}. {t['title']} - {t['status']}")
-            case 3:
-                taskToView = input("Input Task name:  ")
-                found = False
-                for t in tasks:
-                    if t["title"].lower() == taskToView.lower():
-                        print("\n🔎 Task Details:")
-                        for key, value in t.items():
-                            print(f"{key}: {value}")
-                        found = True
-                        break
-                if not found:
-                    print("Task not found.")
-            case 4:
-                if not tasks:
-                    print("No tasks to edit.")
-                else:
-                    for i, t in enumerate(tasks, start=1):
-                        print(f"{i}. {t['title']} - {t['status']}")
-                    edit_index = int(input("Select task number to edit: ")) - 1
-                    if 0 <= edit_index < len(tasks):
-                        editTask(tasks[edit_index])
-                    else:
-                        print("Invalid selection.")
-            case 5:
-                print("Goodbye!")
-                userWant = False
-            case _:
-                print("Invalid choice.")
-    except Exception as e:
-        print("⚠️ An error occurred in main loop:", e)
+    
+        case 1:
+            task["title"] = safe_input("New title: ").strip()
+        case 2:
+            task["details"] = safe_input("New details: ").strip()
+        case 3:
+            task["dueDate"] = prompt_datetime("New due date")
+        case 4:
+            task["priority"] = prompt_int("New priority (1=high, 2=medium, 3=low): ", valid=[1,2,3])
+        elif choice == 5:
+            tags_raw = safe_input("New tags (comma separated): ").strip()
+            task["tags"] = [t.strip() for t in tags_raw.split(",")] if tags_raw else []
+        elif choice == 6:
+            task["status"] = safe_input("New status (todo/doing/done): ").strip().lower() or task.get("status","todo")
+            if task["status"] == "done":
+                task["completedAt"] = datetime.now()
+        elif choice == 7:
+            manage_flashcards(task)
+        elif choice == 8:
+            break
 
+def manage_flashcards(task):
+    cards = task.get("flashCards", [])
+    while True:
+        sub = prompt_int("1. List\n2. Add\n3. Edit\n4. Delete\n5. Back\n", valid=[1,2,3,4,5])
+        if sub == 1:
+            if not cards:
+                print("No flashcards.")
+            else:
+                for i, card in enumerate(cards, start=1):
+                    print(f"{i}. {card.get('Title','Untitled')} -> {card.get('Text','')}")
+        elif sub == 2:
+            title = safe_input("Title: ").strip()
+            text = safe_input("Answer: ").strip()
+            cards.append({"Title": title, "Text": text})
+        elif sub == 3:
+            if not cards:
+                print("No flashcards.")
+                continue
+            for i, card in enumerate(cards, start=1):
+                print(f"{i}. {card.get('Title','Untitled')} -> {card.get('Text','')}")
+            idx = prompt_int("Select card to edit: ")
+            if 1 <= idx <= len(cards):
+                cards[idx-1]["Title"] = safe_input("New title: ").strip()
+                cards[idx-1]["Text"] = safe_input("New answer: ").strip()
+        elif sub == 4:
+            if not cards:
+                print("No flashcards.")
+                continue
+            for i, card in enumerate(cards, start=1):
+                print(f"{i}. {card.get('Title','Untitled')} -> {card.get('Text','')}")
+            idx = prompt_int("Select card to delete: ")
+            if 1 <= idx <= len(cards):
+                cards.pop(idx-1)
+        elif sub == 5:
+            return
 
+def view_task_detail(ts):
+    if not ts:
+        print("No tasks available.")
+        return
+    list_tasks_brief(ts)
+    sel = safe_input("Task number or name: ").strip()
+    t = resolve_task_selection(ts, sel)
+    if t:
+        print(format_task_output(t, detailed=True))
+    else:
+        print("Task not found.")
 
+def study_mode(task_list):
+    if not task_list:
+        print("No tasks to study.")
+        return
+    list_tasks_brief(task_list)
+    sel = safe_input("Task number or name: ").strip()
+    chosen_task = resolve_task_selection(task_list, sel)
+    if not chosen_task:
+        print("Task not found.")
+        return
+    cards = chosen_task.get("flashCards", [])
+    if not cards:
+        print("This task has no flashcards.")
+        return
+    print(f"Studying {chosen_task.get('title')}")
+    score = 0
+    for i, card in enumerate(cards, start=1):
+        q = card.get("Title", f"Card {i}")
+        a = card.get("Text", "")
+        print(f"Q{i}: {q}")
+        user_answer = safe_input("Your answer: ").strip()
+        if user_answer.lower() == a.lower():
+            print("Correct!")
+            score += 1
+        else:
+            print(f"Wrong. Answer: {a}")
+    print(f"Score: {score}/{len(cards)}")
 
+def main():
+    while True:
+        choice = prompt_int("1. Add Task\n2. View All\n3. View One\n4. Edit\n5. Study Mode\n6. Exit\n", valid=[1,2,3,4,5,6])
+        match choice:
+        case 1:
+            new_task = create_task()
+            if new_task:
+                tasks.append(new_task)
+                print("Task created.")
+        case 2:
+            list_tasks_brief(tasks)
+        case 3:
+            view_task_detail(tasks)
+        case 4:
+            if not tasks:
+                print("No tasks.")
+            else:
+                list_tasks_brief(tasks)
+                idx = prompt_int("Task number to edit: ")
+                if 1 <= idx <= len(tasks):
+                    edit_task(tasks[idx-1])
+        case 5:
+            study_mode(tasks)
+        case 6:
+            print("Goodbye!")
+            break
 
-
-
+if __name__ == "__main__":
+    main()
