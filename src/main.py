@@ -1,4 +1,6 @@
 from datetime import datetime
+import curses
+
 
 TASK_TEMPLATE = {
     "title": "",
@@ -219,7 +221,70 @@ def studyMode(task_list):
             print(f"Wrong. Answer: {a}")
     print(f"Score: {score}/{len(cards)}")
 
-def main():
+def main(stdscr):
+    index = 0
+    menu_labels = [
+        "Add Task",
+        "View All",
+        "View One",
+        "Edit",
+        "Study Mode",
+        "Exit"
+    ]
+    while True:
+        curses.curs_set(0)
+        stdscr.erase()
+        stdscr.addstr(0, 0, "Study Buddy")
+        for i, label in enumerate(menu_labels):
+            style = curses.A_REVERSE if i == index else curses.A_NORMAL
+            stdscr.addstr(2 + i, 2, f"{i+1}. {label}", style)
+        stdscr.refresh()
+        key = stdscr.getch()
+
+        if key in (curses.KEY_UP, ord('k')):
+            index = (index - 1) % len(menu_labels)
+        elif key in (curses.KEY_DOWN, ord('j')):
+            index = (index + 1) % len(menu_labels)
+        elif key in (curses.KEY_ENTER, 10, 13):
+            if index == 0:
+                curses.endwin()
+                new_task = create_task()
+                if new_task:
+                    tasks.append(new_task)
+                    print("Task created.")
+                input("Press Enter to continue...")
+                stdscr.clear()
+            elif index == 1:
+                curses.endwin()
+                listTaskBrief(tasks)
+                input("Press Enter to continue...")
+                stdscr.clear()
+            elif index == 2:
+                curses.endwin()
+                viewTaskDetail(tasks)
+                input("Press Enter to continue...")
+                stdscr.clear()
+            elif index == 3:
+                curses.endwin()
+                if not tasks:
+                    print("No tasks.")
+                else:
+                    listTaskBrief(tasks)
+                    idx = prompt_int("Task number to edit: ")
+                    if 1 <= idx <= len(tasks):
+                        edit_task(tasks[idx-1])
+                input("Press Enter to continue...")
+                stdscr.clear()
+            elif index == 4:
+                curses.endwin()
+                studyMode(tasks)
+                input("Press Enter to continue...")
+                stdscr.clear()
+            elif index == 5:
+                curses.endwin()
+                print("Goodbye!")
+                break
+
     while True:
         choice = prompt_int("1. Add Task\n2. View All\n3. View One\n4. Edit\n5. Study Mode\n6. Exit\n", valid=[1,2,3,4,5,6])
         match choice:
@@ -245,6 +310,8 @@ def main():
             case 6:
                 print("Goodbye!")
                 break
+            case _:
+                print("Invalid choice.")
 
 if __name__ == "__main__":
-    main()
+    curses.wrapper(main)
